@@ -50,8 +50,6 @@ jobs:
             docker build . -t ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
             docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:${{ steps.image-version.outputs.version }}
             docker push ${{ vars.DOCKER_REGISTRY_SERVER_URL }}/${{env.IMAGE_NAME}}:latest
-        outputs:
-            image-version: ${{ steps.image-version.outputs.version }}
         
     deploy:
         runs-on: ubuntu-latest
