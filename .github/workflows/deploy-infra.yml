@@ -61,13 +61,14 @@ jobs:
       - name: deploy-key-vault
         uses: azure/arm-deploy@v1.0.9
         with:
-          scope : 'resourcegroup'
+          scope: resourcegroup  # Set the appropriate scope: 'resourcegroup', 'managementgroup', or 'subscription'
           subscriptionId: ${{ env.SUBSCRIPTION_ID_DEV }}
           resourceGroupName: ${{ env.RESOURCE_GROUP_DEV }}
-          template: .github/infra/key-vault.bicep  
-          parameters: .github/infra/parameters/key-vault.json  # Adjusted the path
-          deploymentName: '${{env.USER_ALIAS}}-kv'
+          template: .github/infra/modules/key-vault/vault/main.bicep  # Adjusted the path
+          parameters: .github/infra/modules/key-vault/vault/parameters.json  # Adjusted the path
+          deploymentName: '${{ env.USER_ALIAS }}-kv'
           failOnStdErr: false
+
 
       # Deploy Bicep File
       - name: deploy-main
