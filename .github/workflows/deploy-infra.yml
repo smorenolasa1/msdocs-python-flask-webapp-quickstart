@@ -48,6 +48,7 @@ jobs:
           parameters: ./infra/parameters/key-vault.json
           deploymentName: '${{ env.USER_ALIAS }}-kv'
           failOnStdErr: false
+          scope: "resourcegroup"
 
       - name: Deploy Main Bicep file
         id: deploy
@@ -59,3 +60,5 @@ jobs:
           parameters: ./infra/parameters/parameters.json
           deploymentName: ${{ env.USER_ALIAS }}
           failOnStdErr: false
+          scope: "resourcegroup"
+
