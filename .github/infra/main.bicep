@@ -1,20 +1,42 @@
-param keyVaultName string
-param containerRegistryName string
-param containerRegistryImageName string
-param containerRegistryImageVersion string = 'main-latest'
-param appServicePlanName string
-param siteName string
-param location string = resourceGroup().location
-param kevVaultSecretNameACRUsername string = 'acr-username'
-param kevVaultSecretNameACRPassword1 string = 'acr-password1'
-param kevVaultSecretNameACRPassword2 string = 'acr-password2'
+param username string
+@sys.description('The username to use for the deployment')
 
-resource keyvault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+param containerRegistryName string
+@sys.description('The name of the container registry')
+
+param containerRegistryImageName string
+@sys.description('The name of the container image')
+
+param containerRegistryImageVersion string
+@sys.description('The version of the container image')
+
+param appServicePlanName string
+@sys.description('The name of the app service plan')
+
+param appName string
+@sys.description('The name of the app')
+
+param location string = resourceGroup().location
+@sys.description('The location of the resources')
+
+param keyVaultName string
+@sys.description('The name of the key vault')
+
+param keyVaultSecretNameACRUsername string = 'acr-username'
+@sys.description('The name of the key vault secret for the ACR username')
+
+param keyVaultSecretNameACRPassword1 string = 'acr-password1'
+@sys.description('The name of the key vault secret for the first ACR password')
+
+param keyVaultSecretNameACRPassword2 string = 'acr-password2'
+@sys.description('The name of the key vault secret for the second ACR password')
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: keyVaultName
 }
-module containerRegistry 'modules/container-registry/registry/main.bicep' = {
+module registry 'modules/container-registry/registry/main.bicep' = {
   dependsOn: [
-    keyvault
+    keyVault
   ]
   name: '${uniqueString(deployment().name)}-acr'
   params: {
@@ -22,9 +44,9 @@ module containerRegistry 'modules/container-registry/registry/main.bicep' = {
     location: location
     acrAdminUserEnabled: true
     adminCredentialsKeyVaultResourceId: resourceId('Microsoft.KeyVault/vaults', keyVaultName)
-    adminCredentialsKeyVaultSecretUserName: kevVaultSecretNameACRUsername
-    adminCredentialsKeyVaultSecretUserPassword1: kevVaultSecretNameACRPassword1
-    adminCredentialsKeyVaultSecretUserPassword2: kevVaultSecretNameACRPassword2
+    adminCredentialsKeyVaultSecretUserName: keyVaultSecretNameACRUsername
+    adminCredentialsKeyVaultSecretUserPassword1: keyVaultSecretNameACRPassword1
+    adminCredentialsKeyVaultSecretUserPassword2: keyVaultSecretNameACRPassword2
   }
 }
 
@@ -33,7 +55,7 @@ module serverfarm 'modules/web/serverfarm/main.bicep' = {
   params: {
     name: appServicePlanName
     location: location
-    sku: {
+    sku: {  
       capacity: 1
       family: 'B'
       name: 'B1'
@@ -44,15 +66,13 @@ module serverfarm 'modules/web/serverfarm/main.bicep' = {
   }
 }
 
-module website 'modules/web/site/main.bicep' =  {
+module website 'modules/web/site/main.bicep' = {
   dependsOn: [
     serverfarm
-    containerRegistry
-    keyvault
   ]
-  name: '${uniqueString(deployment().name)}-site'
+  name: 'exercise3-${username}-app'
   params: {
-    name: siteName
+    name: appName
     location: location
     kind: 'app'
     serverFarmResourceId: resourceId('Microsoft.Web/serverfarms', appServicePlanName)
@@ -62,10 +82,10 @@ module website 'modules/web/site/main.bicep' =  {
     }
     appSettingsKeyValuePairs: {
       WEBSITES_ENABLE_APP_SERVICE_STORAGE: false
-      dockerRegistryServerUrl: 'https://${containerRegistryName}.azurecr.io'
-      dockerRegistryServerUserName: kevVaultSecretNameACRUsername
-      dockerRegistryServerPassword: kevVaultSecretNameACRPassword1
-
+      DUMMY: registry.outputs.name
     }
+    dockerRegistryServerUrl: 'https://${containerRegistryName}.azurecr.io'
+    dockerRegistryServerUsername: keyVault.getSecret(keyVaultSecretNameACRUsername)
+    dockerRegistryServerPassword: keyVault.getSecret(keyVaultSecretNameACRPassword1)
   }
 }
