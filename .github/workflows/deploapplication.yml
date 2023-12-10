@@ -37,5 +37,5 @@ jobs:
       - name: "Deploy to Azure Web App"
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "sofiaex3-appservicep"
+          app-name: "sofiaex3-webapp"
           images: "${{ env.REGISTRY_URL }}/${{env.IMAGE_NAME}}:latest"
