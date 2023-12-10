@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 env:
   IMAGE_NAME: flask-demo
-  REGISTRY_URL: sofiaex3containeregistry.azurecr.io
+  REGISTRY_URL: sofiaex3registry.azurecr.io
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -37,5 +37,5 @@ jobs:
       - name: "Deploy to Azure Web App"
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "cristinaEx3Webapp"
+          app-name: "sofiaex3-appservice"
           images: "${{ env.REGISTRY_URL }}/${{env.IMAGE_NAME}}:latest"
